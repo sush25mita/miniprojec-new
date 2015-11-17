@@ -1,113 +1,95 @@
-# miniprojec-new
 #include<stdio.h>
-void word(char[],char[],int);
 int main()
 {
-    FILE *fp,*fp1;
-    char str[80],opcode[10],operand[10],label[10]symtab[10][10];
-    int c=0,i,j=0,locctr=0,l,symentry=0;
-    fp=fopen("prog.txt","w");
-    if(fp==NULL)
+    struct prog
     {
-        puts("cannot open file");
-        exit(0);
-    }
-    while(strlen(gets(str))>0)
+        char lab[10];
+        char mnemo[10];
+        char field[10];
+    }e;
+    struct optb
     {
-        fputs(str,fp);
-        fputs("\n",fp);
-    }
-    fclose(fp);
-    fp=fopen("prog.txt","r");
+        char mne[10];
+        int opcd;
+    };
+    struct optb e1;
+    struct symtab
+    {
+        char label[10];
+        int addrs;
+    };
+    struct symtab s[20];
+    FILE *fp,*fp1,*fp2;
+    int i,j,locctr=0,l,symentry=0,c=0;
+    fp=fopen("input.txt","r");
     fp1=fopen("interfile.txt","w");
-    if(fp==NULL)
+    fp2=fopen("optab.txt","r");
+    while(fscanf(fp,"%s\t%s\t%s\n",e.lab,e.mnemo,e.field)!=EOF)
     {
-        puts("cannot open file");
-        exit(0);
-    }
-    while(fgets(str,79,fp)!=NULL)
-    {
-        word(str,opcode,6);
-        if(strcmp(opcode,"START")==0)
+        if(strcmp(e.mnemo,"start")==0)
         {
-            word(str,operand,12);
-            l=strlen(operand);
+            l=strlen(e.field);
             j=0;
-            while(j<l-1)
+            while(j<l)
             {
-                locctr=(locctr*10)+(operand[j]-48);
+                locctr=(locctr*10)+(e.field[j]-48);
                 j++;
             }
-            intermediate(fp1,locctr,str);
+            intermediate(fp1,locctr,e.lab,e.mnemo,e.field);
         }
-        while(strcmp(opcode,"END")!=0)
+        else
         {
-            if(str[0]!='.')
+            if(strcmp(e.lab,"END")!=0)
             {
-                word(str,label,0);
-                if(strcmp(label,' ')!=0)
+                /*if(strcmp(e.lab,"-")!=0)
                 {
-                    c=i=0;
-                    while(i!=symentry)
+                    c=0;
+                    for(i=0;i<symentry;i++)
                     {
-                        word(symtab[i],operand,0);
-                        if(strcmp(operand,label)==0)
+                        if(strcmp(s[i].label,e.lab)==0)
                             c++;
-                        i++;
                     }
                     if(c==0)
                     {
-                        l=strlen(label);
-                        for(i=0;label[i]!='\0';i++)
-                        {
-                            symtab[symentry][i]=label[i];
-                        }
-                        while(i!=6)
-                        {
-                            symtab[symentry][i]=' ';
-                            i++;
-                        }
+                        for(i=0;e.lab[i]!='\0';i++)
+                            s[symentry].label[i]=e.lab[i];
+                        s[symentry].label[i]='\0';
                         symentry++;
                     }
+                }*/
+                intermediate(fp1,locctr,e.lab,e.mnemo,e.field);
+                while(fscanf(fp2,"%s%d\n",e1.mne,&e1.opcd)!=EOF)
+                {
+                    if(strcmp(e1.mne,e.mnemo)==0)
+                    {
+                        locctr=locctr+3;
+                    }
                 }
+                if(strcmp(e.mnemo,"WORD")==0)
+                    locctr=locctr+3;
             }
         }
-
     }
-    fclose(fp);
-
 }
-void word(char str[],char wrd[],int n)
+void intermediate(FILE *fp,int loc,char la[],char mn[],char fi[])
 {
-    int i,j=0;
-    for(i=n;(str[i]!=' '&&str[i]!='\0');i++)
+    int i;
+    struct inter
     {
-        wrd[j]=str[i];
-        j++;
-    }
-    wrd[j]='\0';
-}
-void intermediate(FILE *fp,int loc,char str[])
-{
-    int i,j=0,n;
-    char line[30];
-    i=3;
-    while(i!=-1)
-    {
-        n=loc%10;
-        line[i]=n+48;
-        loc=loc/10;
-        i--;
-    }
-    line[4]=' ';
-    line[5]=' ';
-    i=6;
-    for(j=0;str[j]!='\0';j++)
-    {
-        line[i]=str[j];
-        i++;
-    }
-    line[i]='\0';
-    fputs(line,fp);
-    fputs("\n",fp);
+        int loctr;
+        char labl[10];
+        char mnem[10];
+        char fiel[10];
+    }ee;
+    ee.loctr=loc;
+    for(i=0;la[i]!='\0';i++)
+        ee.labl[i]=la[i];
+    ee.labl[i]='\0';
+    for(i=0;mn[i]!='\0';i++)
+        ee.mnem[i]=mn[i];
+    ee.mnem[i]='\0';
+    for(i=0;fi[i]!='\0';i++)
+        ee.fiel[i]=fi[i];
+    ee.fiel[i]='\0';
+    fprintf(fp,"%d\t%s\t%s\t%s\n",ee.loctr,ee.labl,ee.mnem,ee.fiel);
 }
